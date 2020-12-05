@@ -8,7 +8,7 @@ import pandas as pd
 from binance.enums import *
 from binance.client import Client, requests
 
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_15m"
 
 cliente = Client('o1Q5E6C5rpqYBm5NcXimI75Y3nbcim9wXq3sH3O76TSg6vrTwBSRMx1yCGOiHdOo',
                  'Hlpmd3TlY0H8LsPD4PZOaO5CUZnibIONTHFF3cO12ADSLz5FDRbXRZyM41ArRHCw')
@@ -62,7 +62,7 @@ def binanceDataFrame(self, klines):
     return df
 
 
-cesta = ['ETHUSDT']
+cesta = ['BTCUSDT']
 
 
 def obterSinal():
@@ -89,7 +89,7 @@ def obterSinal():
 
         if len(operacoesAbertas) == 0:
             if rsi[-1] <= 5.0 and centavos[1] == '0':
-                abrirPosicao(ativo=ativoCesta, lote=10, lado=SIDE_BUY)
+                abrirPosicao(ativo=ativoCesta, lote=0.5, lado=SIDE_BUY)
                 print('----------------------------------')
                 print("COMPRADO EM: {}".format(ativoCesta))
                 print('----------------------------------')
