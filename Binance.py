@@ -7,11 +7,11 @@ import numpy as np
 import pandas as pd
 from binance.enums import *
 from binance.client import Client, requests
+import config
 
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_15m"
+SOCKET = "wss://stream.binance.com:9443/ws/ethusdt@kline_1m"
 
-cliente = Client('o1Q5E6C5rpqYBm5NcXimI75Y3nbcim9wXq3sH3O76TSg6vrTwBSRMx1yCGOiHdOo',
-                 'Hlpmd3TlY0H8LsPD4PZOaO5CUZnibIONTHFF3cO12ADSLz5FDRbXRZyM41ArRHCw')
+cliente = Client(config.API_KEY, config.API_SECRET)
 
 operacoesAbertas = []
 
@@ -62,10 +62,10 @@ def binanceDataFrame(self, klines):
     return df
 
 
-cesta = ['BTCUSDT']
+cesta = ['ETHUSDT']
 
 
-def obterSinal():
+def obterSinal(minima):
 
     for ativoCesta in cesta:
 
@@ -82,14 +82,15 @@ def obterSinal():
 
         tick = cliente.futures_symbol_ticker(symbol=ativoCesta)
 
-        print(tick)
-
         precoAtual = float(tick['price'])
-        centavos = tick['price'].split('.')
+        centavos = minima.split('.')
+
+        print('Fechamento: {} | Centavos: {}'.format(
+            close[-1], float(centavos[1])))
 
         if len(operacoesAbertas) == 0:
-            if rsi[-1] <= 5.0 and centavos[1] == '0':
-                abrirPosicao(ativo=ativoCesta, lote=0.5, lado=SIDE_BUY)
+            if rsi[-1] <= 8.0 and float(centavos[1]) == 0.0:
+                abrirPosicao(ativo=ativoCesta, lote=10, lado=SIDE_BUY)
                 print('----------------------------------')
                 print("COMPRADO EM: {}".format(ativoCesta))
                 print('----------------------------------')
@@ -113,7 +114,7 @@ def obterSinal():
                         print("OPERAÇÃO FINALIZADA EM: {}".format(operacao))
                         print('---------------------------------------------')
 
-            if rsi[-1] <= 5.0 and centavos[1] == '0':
+            if rsi[-1] <= 8.0 and float(centavos[1]) == 0.0:
                 infoPosicao = cliente.futures_position_information(
                     symbol=ativoCesta)
 
@@ -123,7 +124,7 @@ def obterSinal():
                     print("Condição de compra acionada, mas já existe uma posição aberta em {}".format(
                         ativoCesta))
                 else:
-                    abrirPosicao(ativo=ativoCesta, lote=0.5, lado=SIDE_BUY)
+                    abrirPosicao(ativo=ativoCesta, lote=10, lado=SIDE_BUY)
                     print('----------------------------------')
                     print("COMPRADO EM: {}".format(ativoCesta))
                     print('----------------------------------')
@@ -148,7 +149,7 @@ def onMessage(ws, mensagem):
 
         horarioNegociacao = pd.to_datetime(candle['T'], unit='ms')
 
-        obterSinal()
+        obterSinal(minima=candle['l'])
 
 
 ws = websocket.WebSocketApp(SOCKET, on_open=onOpen,
