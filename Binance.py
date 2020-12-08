@@ -16,14 +16,36 @@ cliente = Client(config.API_KEY, config.API_SECRET)
 operacoesAbertas = []
 
 
-def abrirPosicao(ativo, lote, lado):
+def onOpen(ws):
+    print("Conexão aberta")
+
+
+def onClose(ws):
+    print("Conexão fechada")
+
+
+def onMessage(ws, mensagem):
+    mensagemJson = json.loads(mensagem)
+
+    candle = mensagemJson['k']
+
+    candleFechado = candle['x']  # retorna True se o candle acabou de fechar
+
+    if candleFechado:
+
+        horarioNegociacao = pd.to_datetime(candle['T'], unit='ms')
+
+        obterSinal(minima=candle['l'], fechamento=candle['c'])
+
+
+def abrirPosicao(ativo, lote, lado, preco):
 
     try:
 
         cliente.futures_change_leverage(symbol=ativo, leverage=100)
 
         ordem = cliente.futures_create_order(
-            symbol=ativo, side=lado, type='MARKET', quantity=lote)
+            symbol=ativo, side=lado, type='MARKET', quantity=lote, timeInForce='GTC', price=preco)
 
         operacoesAbertas.append(ativo)
 
@@ -65,7 +87,7 @@ def binanceDataFrame(self, klines):
 cesta = ['ETHUSDT']
 
 
-def obterSinal(minima):
+def obterSinal(minima, fechamento):
 
     for ativoCesta in cesta:
 
@@ -83,6 +105,7 @@ def obterSinal(minima):
         tick = cliente.futures_symbol_ticker(symbol=ativoCesta)
 
         precoAtual = float(tick['price'])
+        precoLimit = prectoAtual - 0.05
         centavos = minima.split('.')
 
         print('Fechamento: {} | Centavos: {}'.format(
@@ -90,7 +113,8 @@ def obterSinal(minima):
 
         if len(operacoesAbertas) == 0:
             if rsi[-1] <= 8.0 and float(centavos[1]) == 0.0:
-                abrirPosicao(ativo=ativoCesta, lote=10, lado=SIDE_BUY)
+                abrirPosicao(ativo=ativoCesta, lote=10,
+                             lado=SIDE_BUY, preco=precoLimit)
                 print('----------------------------------')
                 print("COMPRADO EM: {}".format(ativoCesta))
                 print('----------------------------------')
@@ -106,7 +130,7 @@ def obterSinal(minima):
                     precoAtual = float(tick['price'])
                     quantidade = infoPosicao[0]['positionAmt']
 
-                    if precoAtual > mediaMovel[-1]:
+                    if float(fechamento) > mediaMovel[-1]:
                         fecharPosicao(ativo=operacao,
                                       lote=quantidade, lado=SIDE_SELL)
                         operacoesAbertas.remove(operacao)
@@ -124,32 +148,11 @@ def obterSinal(minima):
                     print("Condição de compra acionada, mas já existe uma posição aberta em {}".format(
                         ativoCesta))
                 else:
-                    abrirPosicao(ativo=ativoCesta, lote=10, lado=SIDE_BUY)
+                    abrirPosicao(ativo=ativoCesta, lote=10,
+                                 lado=SIDE_BUY, preco=precoLimit)
                     print('----------------------------------')
                     print("COMPRADO EM: {}".format(ativoCesta))
                     print('----------------------------------')
-
-
-def onOpen(ws):
-    print("Conexão aberta")
-
-
-def onClose(ws):
-    print("Conexão fechada")
-
-
-def onMessage(ws, mensagem):
-    mensagemJson = json.loads(mensagem)
-
-    candle = mensagemJson['k']
-
-    candleFechado = candle['x']  # retorna True se o candle acabou de fechar
-
-    if candleFechado:
-
-        horarioNegociacao = pd.to_datetime(candle['T'], unit='ms')
-
-        obterSinal(minima=candle['l'])
 
 
 ws = websocket.WebSocketApp(SOCKET, on_open=onOpen,
