@@ -9,7 +9,7 @@ from binance.enums import *
 from binance.client import Client, requests
 import config
 
-SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
+SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_15m"
 # SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
 
 cliente = Client(config.API_KEY, config.API_SECRET)
@@ -45,7 +45,7 @@ def onMessage(ws, mensagem):
         pnl = float(infoPosicao[0]['unRealizedProfit'])
         quantidade = infoPosicao[0]['positionAmt']
 
-        if pnl >= 50.00:
+        if pnl >= 100.00:
             fecharPosicao(ativo='BTCUSDT', lote=quantidade, lado=SIDE_SELL)
             operacoesAbertas.remove('BTCUSDT')
 
@@ -106,7 +106,7 @@ def obterSinal(minima, fechamento):
     for ativoCesta in cesta:
 
         dados = np.array(cliente.futures_klines(
-            symbol=ativoCesta, interval=KLINE_INTERVAL_1MINUTE))
+            symbol=ativoCesta, interval=KLINE_INTERVAL_15MINUTE))
         df = binanceDataFrame(dados, dados)
         df.set_index('Open Time', inplace=True)
         df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
@@ -116,7 +116,7 @@ def obterSinal(minima, fechamento):
 
         mediaMovel = ta.trend.sma_indicator(close, 5)
 
-        precoLimit = close[-1] - 0.1
+        precoLimit = float(fechamento) - 5.00
 
         centavos = minima.split('.')
 
