@@ -7,12 +7,12 @@ import numpy as np
 import pandas as pd
 from binance.enums import *
 from binance.client import Client, requests
-import config
+# import config
 
 SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_15m"
 # SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
 
-cliente = Client(config.API_KEY, config.API_SECRET)
+cliente = Client('o1Q5E6C5rpqYBm5NcXimI75Y3nbcim9wXq3sH3O76TSg6vrTwBSRMx1yCGOiHdOo', 'Hlpmd3TlY0H8LsPD4PZOaO5CUZnibIONTHFF3cO12ADSLz5FDRbXRZyM41ArRHCw')
 
 operacoesAbertas = []
 
