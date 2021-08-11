@@ -136,6 +136,7 @@ def obterSinal(minima, fechamento, horario):
 
         file = open("operacoes.txt", "a")
         file.write("Horário entrada: %s" % horario)
+        file.write("\n")
         file.close()
 
         print('Fechamento: {} | Centavos {} | Horário: {}'.format(
@@ -150,16 +151,15 @@ def obterSinal(minima, fechamento, horario):
                 operacoesAbertas.append(ativoCesta)
 
                 file = open("operacoes.txt", "a")
-
-                file.write("Horário entrada: %d" % 1)
+                file.write("Horário entrada: %s" % horario)
+                file.write("\n")
+                file.close()
 
                 print('----------------------------------')
                 print("COMPRADO EM: {}".format(ativoCesta))
                 print("PREÇO: {}".format(precoLimit))
                 print("HORÁRIO: {}".format(horario))
                 print('----------------------------------')
-
-                file.close()
 
         else:
             for operacao in operacoesAbertas:
@@ -175,6 +175,12 @@ def obterSinal(minima, fechamento, horario):
                         # fecharPosicao(ativo=operacao,
                         #               lote=quantidade, lado=SIDE_SELL)
                         operacoesAbertas.remove(operacao)
+
+                        file = open("operacoes.txt", "a")
+                        file.write("Horário saída: %s" % horario)
+                        file.write("\n")
+                        file.close()
+
                         print('---------------------------------------------')
                         print("OPERAÇÃO FINALIZADA EM: {}".format(operacao))
                         print("PREÇO: {}".format(float(fechamento)))
