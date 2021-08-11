@@ -10,7 +10,7 @@ from binance.client import Client, requests
 # import config
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1h"
 
 cliente = Client('o1Q5E6C5rpqYBm5NcXimI75Y3nbcim9wXq3sH3O76TSg6vrTwBSRMx1yCGOiHdOo',
                  'Hlpmd3TlY0H8LsPD4PZOaO5CUZnibIONTHFF3cO12ADSLz5FDRbXRZyM41ArRHCw')
@@ -114,7 +114,7 @@ def obterSinal(minima, fechamento, horario):
     for ativoCesta in cesta:
 
         dados = np.array(cliente.futures_klines(
-            symbol=ativoCesta, interval=KLINE_INTERVAL_1MINUTE))
+            symbol=ativoCesta, interval=KLINE_INTERVAL_1HOUR))
 
         df = binanceDataFrame(dados, dados)
 
