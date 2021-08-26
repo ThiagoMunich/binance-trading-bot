@@ -12,7 +12,7 @@ from binance.enums import *
 from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, condicaoAbrirVenda, condicaoFecharVenda, operacoesAbertas
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
 
 precoEntrada = 0.0
 resultadoAcumulado = 0.0
@@ -65,13 +65,15 @@ def obterSinal(minima, maxima, fechamento, horario):
     global resultadoAcumulado
 
     dados = np.array(cliente.get_klines(
-        symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
+        symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
 
     df = binanceDataFrame(dados, dados)
 
     df.set_index('Open Time', inplace=True)
 
     df = df[['Open', 'High', 'Low', 'Close']]
+
+    df = df[:-1]
 
     high, low = df['High'], df['Low']
 
@@ -83,7 +85,7 @@ def obterSinal(minima, maxima, fechamento, horario):
     centavosHigh = float(maxima.split('.')[1])
 
     print('Fechamento: {} | DemaHigh: {} | DemaLow: {} | Horário: {}'.format(
-        fechamento, demaHigh[-1], demaHigh[-1], horario))
+        fechamento, demaHigh[-1], demaLow[-1], horario))
 
     if len(operacoesAbertas) == 0:
         # print('Aguardando sinal...')
