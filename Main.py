@@ -12,7 +12,7 @@ from binance.enums import *
 from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, condicaoAbrirVenda, condicaoFecharVenda, operacoesAbertas
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
 
 precoEntrada = 0.0
 resultadoAcumulado = 0.0
@@ -65,7 +65,7 @@ def obterSinal(minima, maxima, fechamento, horario):
     global resultadoAcumulado
 
     dados = np.array(cliente.get_klines(
-        symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
+        symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
 
     df = binanceDataFrame(dados, dados)
 
