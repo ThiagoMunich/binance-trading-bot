@@ -11,6 +11,8 @@ from binance.enums import *
 
 from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, condicaoAbrirVenda, condicaoFecharVenda, operacoesAbertas
 
+from Telegram import enviarMensagem
+
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
 SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
 
@@ -93,6 +95,8 @@ def obterSinal(abertura, maxima, minima, fechamento, horario):
 
     print('Fechamento: {} | DemaHigh: {} | DemaLow: {} | Horário: {}'.format(
         fechamento, demaHigh[-1], demaLow[-1], horario))
+
+    enviarMensagem(mensagem=fechamento)
 
     if len(operacoesAbertas) == 0:
         # print('Aguardando sinal...')
