@@ -5,6 +5,7 @@ import json
 import time
 import talib
 import websocket
+import datetime
 import numpy as np
 import pandas as pd
 from binance.enums import *
@@ -12,10 +13,13 @@ from binance.enums import *
 from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, condicaoAbrirVenda, condicaoFecharVenda, operacoesAbertas
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
 
 precoEntrada = 0.0
 resultadoAcumulado = 0.0
+
+agora = datetime.datetime.utcnow()
+teste = datetime.datetime.strftime(agora, '%Y/%m/%d %H:%M:00')
 
 
 def onOpen(ws):
@@ -37,7 +41,7 @@ def onMessage(ws, mensagem):
 
         horario = pd.to_datetime(candle['T'], unit='ms')
 
-        obterSinal(minima=candle['l'], maxima=candle['h'],
+        obterSinal(abertura=candle['o'], maxima=candle['h'], minima=candle['l'],
                    fechamento=candle['c'], horario=horario)
 
 
@@ -60,12 +64,16 @@ def binanceDataFrame(self, klines):
     return df
 
 
-def obterSinal(minima, maxima, fechamento, horario):
+def obterSinal(abertura, maxima, minima, fechamento, horario):
     global precoEntrada
     global resultadoAcumulado
 
+    # pra dar tempo de pegar os dados do candle que tá aberto, e depois removê-lo
+    # mantendo assim somente até o ultimo candle fechado
+    time.sleep(3)
+
     dados = np.array(cliente.get_klines(
-        symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
+        symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
 
     df = binanceDataFrame(dados, dados)
 
