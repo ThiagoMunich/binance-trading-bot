@@ -40,10 +40,7 @@ def onMessage(ws, mensagem):
 
     if candleFechado:
 
-        horario = pd.to_datetime(candle['T'], unit='ms')
-
-        obterSinal(abertura=candle['o'], maxima=candle['h'], minima=candle['l'],
-                   fechamento=candle['c'], horario=horario)
+        obterSinal()
 
 
 def binanceDataFrame(self, klines):
@@ -65,13 +62,16 @@ def binanceDataFrame(self, klines):
     return df
 
 
-def obterSinal(abertura, maxima, minima, fechamento, horario):
+def obterSinal():
     global precoEntrada
     global resultadoAcumulado
 
     # pra dar tempo de pegar os dados do candle que tá aberto, e depois removê-lo
     # mantendo assim somente até o ultimo candle fechado
     time.sleep(3)
+
+    agora = datetime.datetime.utcnow()
+    horarioFormatado = datetime.datetime.strftime(agora, '%d/%m/%Y %H:%M:00')
 
     dados = np.array(cliente.get_klines(
         symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
@@ -80,100 +80,124 @@ def obterSinal(abertura, maxima, minima, fechamento, horario):
 
     df.set_index('Open Time', inplace=True)
 
-    df = df[['Open', 'High', 'Low', 'Close']]
+    df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
 
     df = df[:-1]
 
-    high, low = df['High'], df['Low']
+    high, low, close, volume = df['High'], df['Low'], df['Close'], df['Volume']
 
     demaHigh = talib.DEMA(high, 11)
 
     demaLow = talib.DEMA(low, 11)
 
-    centavosLow = float(minima.split('.')[1])
-    centavosHigh = float(maxima.split('.')[1])
+    demaVolume = talib.DEMA(volume, 6)
 
-    print('Fechamento: {} | DemaHigh: {} | DemaLow: {} | Horário: {}'.format(
-        fechamento, demaHigh[-1], demaLow[-1], horario))
+    centavosLow = float(str(low[-1]).split('.')[1])
+    centavosHigh = float(str(high[-1]).split('.')[1])
 
-    enviarMensagem(mensagem=fechamento)
+    # print('Fechamento: {} | DemaHigh: {} | DemaLow: {} | Horário: {}'.format(
+    #     close[-1], demaHigh[-1], demaLow[-1], horario))
 
     if len(operacoesAbertas) == 0:
-        # print('Aguardando sinal...')
-        if float(fechamento) < demaLow[-1] and centavosLow == 0:
+        print('Aguardando sinal...')
+        if close[-1] < demaLow[-1] and centavosLow == 0 and volume[-1] > demaVolume[-1]:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
             # remover quando for operar em conta real
             operacoesAbertas.append('comprado')
-            precoEntrada = float(fechamento)
+            precoEntrada = close[-1]
+
+            mensagem = 'COMPRADO\n\nHorário entrada: {}'.format(
+                horarioFormatado)
+
+            enviarMensagem(mensagem=mensagem)
 
             file = open("operacoes.txt", "a")
-            file.write("COMPRADO - Horário entrada: %s" % horario)
+            file.write("COMPRADO - Horário entrada: %s" % horarioFormatado)
             file.write("\n")
             file.close()
 
             print('----------------------------------')
             print("OPERAÇÃO DE COMPRA ABERTA")
-            print("PREÇO: {}".format(fechamento))
-            print("HORÁRIO: {}".format(horario))
+            print("PREÇO: {}".format(close[-1]))
+            print("HORÁRIO: {}".format(horarioFormatado))
             print('----------------------------------')
 
-        elif float(fechamento) > demaHigh[-1] and centavosHigh == 0:
+        elif close[-1] > demaHigh[-1] and centavosHigh == 0 and volume[-1] > demaVolume[-1]:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
             # remover quando for operar em conta real
             operacoesAbertas.append('vendido')
-            precoEntrada = float(fechamento)
+            precoEntrada = close[-1]
+
+            mensagem = 'VENDIDO\n\nHorário entrada: {}'.format(
+                horarioFormatado)
+
+            enviarMensagem(mensagem=mensagem)
 
             file = open("operacoes.txt", "a")
-            file.write("VENDIDO - Horário entrada: %s" % horario)
+            file.write("VENDIDO - Horário entrada: %s" % horarioFormatado)
             file.write("\n")
             file.close()
 
             print('----------------------------------')
             print("OPERAÇÃO DE VENDA ABERTA")
-            print("PREÇO: {}".format(fechamento))
-            print("HORÁRIO: {}".format(horario))
+            print("PREÇO: {}".format(close[-1]))
+            print("HORÁRIO: {}".format(horarioFormatado))
             print('----------------------------------')
 
     else:
         if operacoesAbertas[0] == 'comprado':
-            if float(fechamento) > demaHigh[-1]:
+            print('Posição de compra ainda aberta.')
+            if close[-1] > demaHigh[-1]:
 
                 operacoesAbertas.pop()
 
-                resultadoAcumulado += float(fechamento) - precoEntrada
+                resultadoAcumulado += close[-1] - precoEntrada
+
+                mensagem = 'COMPRA FECHADA\n\nHorário saída: {}\n\nResultado acumulado: {} USD'.format(
+                    horarioFormatado, round(resultadoAcumulado, 2))
+
+                enviarMensagem(mensagem=mensagem)
 
                 file = open("operacoes.txt", "a")
-                file.write("COMPRA FECHADA - Horário saída: %s" % horario)
+                file.write("COMPRA FECHADA - Horário saída: %s" %
+                           horarioFormatado)
                 file.write("\n")
                 file.close()
 
                 print('---------------------------------------------')
                 print("OPERAÇÃO DE COMPRA FINALIZADA")
-                print("PREÇO: {}".format(float(fechamento)))
-                print("HORÁRIO: {}".format(horario))
+                print("PREÇO: {}".format(close[-1]))
+                print("HORÁRIO: {}".format(horarioFormatado))
                 print("RESULTADO ACUMULADO: {}".format(resultadoAcumulado))
                 print('---------------------------------------------')
 
         elif operacoesAbertas[0] == 'vendido':
-            if float(fechamento) < demaLow[-1]:
+            print('Posição de venda ainda aberta.')
+            if close[-1] < demaLow[-1]:
 
                 operacoesAbertas.pop()
 
-                resultadoAcumulado += precoEntrada - float(fechamento)
+                resultadoAcumulado += precoEntrada - close[-1]
+
+                mensagem = 'VENDA FECHADA\n\nHorário saída: {}\n\nResultado acumulado: {} USD'.format(
+                    horarioFormatado, round(resultadoAcumulado, 2))
+
+                enviarMensagem(mensagem=mensagem)
 
                 file = open("operacoes.txt", "a")
-                file.write("VENDA FECHADA - Horário saída: %s" % horario)
+                file.write("VENDA FECHADA - Horário saída: %s" %
+                           horarioFormatado)
                 file.write("\n")
                 file.close()
 
                 print('---------------------------------------------')
                 print("OPERAÇÃO DE VENDA FINALIZADA")
-                print("PREÇO: {}".format(float(fechamento)))
-                print("HORÁRIO: {}".format(horario))
+                print("PREÇO: {}".format(close[-1]))
+                print("HORÁRIO: {}".format(horarioFormatado))
                 print("RESULTADO ACUMULADO: {}".format(resultadoAcumulado))
                 print('---------------------------------------------')
 
