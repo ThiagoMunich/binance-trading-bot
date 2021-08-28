@@ -14,7 +14,7 @@ from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, 
 from Telegram import enviarMensagem
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
 
 precoEntrada = 0.0
 resultadoAcumulado = 0.0
@@ -74,7 +74,7 @@ def obterSinal():
     horarioFormatado = datetime.datetime.strftime(agora, '%d/%m/%Y %H:%M:00')
 
     dados = np.array(cliente.get_klines(
-        symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
+        symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
 
     df = binanceDataFrame(dados, dados)
 
