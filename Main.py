@@ -1,6 +1,5 @@
 
 from Binance import cliente
-import ta
 import json
 import time
 import talib
