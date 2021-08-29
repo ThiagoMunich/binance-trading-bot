@@ -90,8 +90,6 @@ def obterSinal():
 
     demaLow = talib.DEMA(low, 10)
 
-    demaVolume = talib.DEMA(volume, 6)
-
     centavosLow = float(str(low[-1]).split('.')[1])
     centavosHigh = float(str(high[-1]).split('.')[1])
 
@@ -100,7 +98,7 @@ def obterSinal():
 
     if len(operacoesAbertas) == 0:
         print('Aguardando sinal...')
-        if close[-1] < demaLow[-1] and centavosLow == 0 and volume[-1] > demaVolume[-1]:
+        if close[-1] < demaLow[-1] and centavosLow == 0:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
@@ -124,7 +122,7 @@ def obterSinal():
             print("HORÁRIO: {}".format(horarioFormatado))
             print('----------------------------------')
 
-        elif close[-1] > demaHigh[-1] and centavosHigh == 0 and volume[-1] > demaVolume[-1]:
+        elif close[-1] > demaHigh[-1] and centavosHigh == 0:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
