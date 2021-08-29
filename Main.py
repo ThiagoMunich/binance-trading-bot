@@ -86,9 +86,9 @@ def obterSinal():
 
     high, low, close = df['High'], df['Low'], df['Close']
 
-    demaHigh = talib.DEMA(high, 10)
+    demaHigh = talib.DEMA(high, 11)
 
-    demaLow = talib.DEMA(low, 10)
+    demaLow = talib.DEMA(low, 11)
 
     centavosLow = float(str(low[-1]).split('.')[1])
     centavosHigh = float(str(high[-1]).split('.')[1])
