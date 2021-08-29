@@ -84,7 +84,7 @@ def obterSinal():
 
     df = df[:-1]
 
-    high, low, close, volume = df['High'], df['Low'], df['Close'], df['Volume']
+    high, low, close = df['High'], df['Low'], df['Close']
 
     demaHigh = talib.DEMA(high, 10)
 
