@@ -15,7 +15,7 @@ from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, 
 from Telegram import mensagemTelegram
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
 
 precoEntrada = 0.0
 resultadoAcumulado = 0.0
@@ -139,7 +139,7 @@ def obterSinal():
     horarioFormatado = datetime.datetime.strftime(agora, '%d/%m/%Y %H:%M:00')
 
     dados = np.array(cliente.get_klines(
-        symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
+        symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
 
     df = binanceDataFrame(dados, dados)
 
@@ -168,7 +168,7 @@ def obterSinal():
 
     if len(operacoesAbertas) == 0:
         print('Aguardando sinal...')
-        if close[-1] < demaLow[-1]:
+        if close[-1] < demaLow[-1] and centavosLow == 0 and differeceBetweenCloseAndLow < 100:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
@@ -184,7 +184,7 @@ def obterSinal():
 
             mensagemEntradaOperacao(preco=close[-1], lado='COMPRA')
 
-        elif close[-1] > demaHigh[-1]:
+        elif close[-1] > demaHigh[-1] and centavosHigh == 0 and differeceBetweenCloseAndHigh < 100:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
