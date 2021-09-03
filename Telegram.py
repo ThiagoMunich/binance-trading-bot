@@ -1,7 +1,7 @@
 import requests
 
 
-def enviarMensagem(mensagem):
+def mensagemTelegram(mensagem):
     token = '1945616969:AAE7nuXekkJ-x1UbvmfjHCfwoXD-E_uhtZo'
     chatId = -573458699
 
