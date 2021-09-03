@@ -15,7 +15,7 @@ from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, 
 from Telegram import mensagemTelegram
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
 
 demaLow = 0.0
 stopLoss = 0.0
@@ -176,7 +176,7 @@ def binanceDataFrame(self, klines):
 
 def montarDataframe(esperarFechamento):
     dados = np.array(cliente.get_klines(
-        symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
+        symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
 
     df = binanceDataFrame(dados, dados)
 
