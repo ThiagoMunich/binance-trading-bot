@@ -15,7 +15,7 @@ from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, 
 from Telegram import mensagemTelegram
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
 
 demaLow = 0.0
 stopLoss = 0.0
@@ -39,9 +39,9 @@ def onClose(ws):
 
 def onMessage(ws, mensagem):
     global stopLoss
+    global precoEntrada
     global parcialVenda
     global parcialCompra
-    global precoEntrada
     global resultadoAcumulado
 
     mensagemJson = json.loads(mensagem)
@@ -176,7 +176,7 @@ def binanceDataFrame(self, klines):
 
 def montarDataframe(esperarFechamento):
     dados = np.array(cliente.get_klines(
-        symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
+        symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
 
     df = binanceDataFrame(dados, dados)
 
@@ -229,7 +229,7 @@ def obterSinal():
 
     if len(operacoesAbertas) == 0:
         print('Aguardando sinal...')
-        if close < demaLow and centavosLow == 0 and differeceBetweenCloseAndLow < 150:
+        if close < demaLow and centavosLow == 0 and differeceBetweenCloseAndLow < 50:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
@@ -245,7 +245,7 @@ def obterSinal():
 
             mensagemEntradaOperacao(preco=close, lado='COMPRA')
 
-        elif close > demaHigh and centavosHigh == 0 and differeceBetweenCloseAndHigh < 150:
+        elif close > demaHigh and centavosHigh == 0 and differeceBetweenCloseAndHigh < 50:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
