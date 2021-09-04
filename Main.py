@@ -229,14 +229,14 @@ def obterSinal():
 
     if len(operacoesAbertas) == 0:
         print('Aguardando sinal...')
-        if close < demaLow and centavosLow == 0 and differeceBetweenCloseAndLow < 100:
+        if close < demaLow and centavosLow == 0 and differeceBetweenCloseAndLow < 150:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
             # remover quando for operar em conta real
             operacoesAbertas.append('comprado')
             precoEntrada = close
-            stopLoss = low - atr
+            stopLoss = low - atr * 0.1
 
             mensagem = 'COMPRADO\n\nHorário entrada: {}'.format(
                 horarioFormatado)
@@ -245,14 +245,14 @@ def obterSinal():
 
             mensagemEntradaOperacao(preco=close, lado='COMPRA')
 
-        elif close > demaHigh and centavosHigh == 0 and differeceBetweenCloseAndHigh < 100:
+        elif close > demaHigh and centavosHigh == 0 and differeceBetweenCloseAndHigh < 150:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
             # remover quando for operar em conta real
             operacoesAbertas.append('vendido')
             precoEntrada = close
-            stopLoss = high + atr
+            stopLoss = high + atr * 0.1
 
             mensagem = 'VENDIDO\n\nHorário entrada: {}'.format(
                 horarioFormatado)
@@ -299,9 +299,6 @@ def obterSinal():
                     resultadoAcumulado += precoEntrada - close
 
                 parcialVenda = False
-
-                resultadoAtual = precoEntrada - close
-                resultadoAcumulado += precoEntrada - close
 
                 mensagem = 'VENDA FECHADA\n\nHorário saída: {}\n\nResultado da operação: {} USD\n\nResultado acumulado: {} USD'.format(
                     horarioFormatado, round(resultadoAtual, 2), round(resultadoAcumulado, 2))
