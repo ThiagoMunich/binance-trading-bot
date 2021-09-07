@@ -187,7 +187,7 @@ def montarDataframe(esperarFechamento):
     if(esperarFechamento):
         df = df[:-1]
 
-    high, low, close = df['High'], df['Low'], df['Close']
+    cOpen, high, low, close = df['Open'], df['High'], df['Low'], df['Close']
 
     demaHigh = talib.DEMA(high, 11)
 
@@ -196,7 +196,7 @@ def montarDataframe(esperarFechamento):
     atr = talib.ATR(high, low, close, 11)
 
     if(esperarFechamento):
-        return high[-1], low[-1], close[-1], demaHigh[-1], demaLow[-1], atr[-1]
+        return cOpen[-1], high[-1], low[-1], close[-1], demaHigh[-1], demaLow[-1], atr[-1]
     else:
         return demaHigh[-1], demaLow[-1]
 
@@ -215,11 +215,21 @@ def obterSinal():
     agora = datetime.datetime.utcnow()
     horarioFormatado = datetime.datetime.strftime(agora, '%d/%m/%Y %H:%M:00')
 
-    high, low, close, demaHigh, demaLow, atr = montarDataframe(
+    cOpen, high, low, close, demaHigh, demaLow, atr = montarDataframe(
         esperarFechamento=True)
 
-    differeceBetweenCloseAndLow = close - low
-    differeceBetweenCloseAndHigh = high - close
+    differeceCloseOpen = close - cOpen
+    candleShadowHigh = 0.0
+    candleShadowLow = 0.0
+
+    if differeceCloseOpen >= 0:
+        candleShadowHigh = high - close
+        candleShadowLow = cOpen - low
+    else:
+        candleShadowHigh = high - cOpen
+        candleShadowLow = close - low
+
+    print(abs(differeceCloseOpen), candleShadowHigh, candleShadowLow)
 
     centavosLow = float(str(low).split('.')[1])
     centavosHigh = float(str(high).split('.')[1])
@@ -229,7 +239,7 @@ def obterSinal():
 
     if len(operacoesAbertas) == 0:
         print('Aguardando sinal...')
-        if close < demaLow and centavosLow == 0 and differeceBetweenCloseAndLow < 50:
+        if close < demaLow and centavosLow == 0 and candleShadowLow > abs(differeceCloseOpen) and candleShadowHigh < 20:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
@@ -245,7 +255,7 @@ def obterSinal():
 
             mensagemEntradaOperacao(preco=close, lado='COMPRA')
 
-        elif close > demaHigh and centavosHigh == 0 and differeceBetweenCloseAndHigh < 50:
+        elif close > demaHigh and centavosHigh == 0 and candleShadowHigh > abs(differeceCloseOpen) and candleShadowHigh < 20:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
