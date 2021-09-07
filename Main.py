@@ -229,8 +229,6 @@ def obterSinal():
         candleShadowHigh = high - cOpen
         candleShadowLow = close - low
 
-    print(abs(differeceCloseOpen), candleShadowHigh, candleShadowLow)
-
     centavosLow = float(str(low).split('.')[1])
     centavosHigh = float(str(high).split('.')[1])
 
