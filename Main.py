@@ -237,7 +237,7 @@ def obterSinal():
 
     if len(operacoesAbertas) == 0:
         print('Aguardando sinal...')
-        if close < demaLow and centavosLow == 0 and candleShadowLow > abs(differeceCloseOpen) and candleShadowHigh < 20:
+        if close < demaLow and centavosLow == 0 and candleShadowLow > abs(differeceCloseOpen) and candleShadowLow < 20:
             # abrirPosicao(ativo=ativoCesta, lote=0.5,
             #              lado=SIDE_BUY, preco=precoLimit)
 
