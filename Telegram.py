@@ -2,8 +2,8 @@ import requests
 
 
 def mensagemTelegram(mensagem):
-    token = '1945616969:AAE7nuXekkJ-x1UbvmfjHCfwoXD-E_uhtZo'
-    chatId = -573458699
+    token = '2023637583:AAGwMc7TNgHK4iUnEmWCJuNqvNPEfoV8wDU'
+    chatId = -566210839
 
     try:
         data = {"chat_id": chatId, "text": mensagem}

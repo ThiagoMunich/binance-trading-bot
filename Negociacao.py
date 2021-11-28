@@ -31,7 +31,7 @@ def condicaoFecharVenda(fechamento, demaLow):
         pass
 
 
-def abrirPosicao(ativo, lote, lado, preco):
+def abrirPosicao(ativo, lote, lado):
 
     try:
 
@@ -39,8 +39,8 @@ def abrirPosicao(ativo, lote, lado, preco):
 
         cliente.futures_change_leverage(symbol=ativo, leverage=100)
 
-        ordem = cliente.futures_create_order(
-            symbol=ativo, side=lado, type='LIMIT', quantity=lote, timeInForce='GTC', price=preco)
+        cliente.futures_create_order(
+            symbol=ativo, side=lado, type='MARKET', quantity=lote)
 
         operacoesAbertas.append(ativo)
 
@@ -54,7 +54,7 @@ def fecharPosicao(ativo, lote, lado):
         cliente.futures_change_leverage(symbol=ativo, leverage=100)
 
         cliente.futures_create_order(
-            symbol=ativo, quantity=lote, side=lado, type='MARKET')
+            symbol=ativo, side=lado, type='MARKET', quantity=lote)
 
     except Exception as e:
         return e
