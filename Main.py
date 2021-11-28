@@ -1,5 +1,4 @@
 
-from numpy.core.fromnumeric import take
 from Binance import cliente
 import json
 import time
@@ -10,7 +9,10 @@ import numpy as np
 import pandas as pd
 from binance.enums import *
 
-from Negociacao import abrirPosicao, condicaoAbrirCompra, condicaoFecharCompra, condicaoAbrirVenda, condicaoFecharVenda, operacoesAbertas
+from Binance import cliente
+
+
+from Negociacao import abrirPosicao, fecharPosicao, condicaoAbrirCompra, condicaoFecharCompra, condicaoAbrirVenda, condicaoFecharVenda, operacoesAbertas
 
 from Telegram import mensagemTelegram
 
@@ -50,84 +52,17 @@ def onMessage(ws, mensagem):
 
     candleFechado = candle['x']
 
-    agora = datetime.datetime.utcnow()
+    # info = cliente.futures_position_information(symbol='BTCUSDT')
 
-    horarioFormatado = datetime.datetime.strftime(agora, '%d/%m/%Y %H:%M:00')
+    # print(info[0])
+
+    # info = cliente.futures_account_trades(symbol='BTCUSDT')
+
+    # print(info)
 
     if candleFechado:
 
         obterSinal()
-    else:
-        tick = float(candle['c'])
-
-        demaHigh, demaLow, = montarDataframe(esperarFechamento=False)
-
-        if operacoesAbertas[0] == 'comprado':
-            if tick < stopLoss:
-                print('Stop loss de compra acionado.')
-
-                resultadoAtual = tick - precoEntrada
-
-                resultadoAcumulado += tick - precoEntrada
-
-                msg = 'STOP LOSS COMPRA\n\nHorário saída: {}\n\nResultado da operação: {} USD\n\nResultado acumulado: {} USD'.format(
-                    horarioFormatado, round(resultadoAtual, 2), round(resultadoAcumulado, 2))
-
-                mensagemTelegram(mensagem=msg)
-
-                operacoesAbertas.pop()
-
-            elif tick >= demaHigh and tick > precoEntrada and parcialCompra == False:
-
-                resultadoAtual = (tick - precoEntrada) / 2
-
-                resultadoAcumulado += (tick - precoEntrada) / 2
-
-                stopLoss = precoEntrada
-
-                parcialCompra = True
-
-                print('Parcial de compra acionada.')
-
-                print('Novo SL: {}'.format(stopLoss))
-
-                msg = 'PARCIAL COMPRA\n\nHorário saída: {}\n\nResultado da operação: {} USD\n\nResultado acumulado: {} USD'.format(
-                    horarioFormatado, round(resultadoAtual, 2), round(resultadoAcumulado, 2))
-
-                mensagemTelegram(mensagem=msg)
-
-        elif operacoesAbertas[0] == 'vendido':
-            if tick > stopLoss:
-                print('Stop loss de venda acionado.')
-
-                resultadoAtual = precoEntrada - tick
-
-                resultadoAcumulado += precoEntrada - tick
-
-                msg = 'STOP LOSS VENDA\n\nHorário saída: {}\n\nResultado da operação: {} USD\n\nResultado acumulado: {} USD'.format(
-                    horarioFormatado, round(resultadoAtual, 2), round(resultadoAcumulado, 2))
-
-                mensagemTelegram(mensagem=msg)
-
-                operacoesAbertas.pop()
-
-            elif tick <= demaLow and tick < precoEntrada and parcialVenda == False:
-
-                resultadoAtual = (precoEntrada - tick) / 2
-
-                resultadoAcumulado += (precoEntrada - tick) / 2
-
-                stopLoss = precoEntrada
-
-                parcialVenda = True
-
-                print('Parcial de venda acionada.')
-                print('Novo SL: {}'.format(stopLoss))
-
-                msg = 'PARCIAL VENDA\n\nHorário saída: {}\n\nResultado da operação: {} USD\n\nResultado acumulado: {} USD'.format(
-                    horarioFormatado, round(resultadoAtual, 2), round(resultadoAcumulado, 2))
-
-                mensagemTelegram(mensagem=msg)
 
 
 def mensagemSaidaOperacao(preco, atual, lado):
@@ -175,6 +110,7 @@ def binanceDataFrame(self, klines):
 
 
 def montarDataframe(esperarFechamento):
+
     dados = np.array(cliente.get_klines(
         symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
 
@@ -187,16 +123,14 @@ def montarDataframe(esperarFechamento):
     if(esperarFechamento):
         df = df[:-1]
 
-    cOpen, high, low, close = df['Open'], df['High'], df['Low'], df['Close']
+    high, low, close = df['High'], df['Low'], df['Close']
 
     demaHigh = talib.DEMA(high, 11)
 
     demaLow = talib.DEMA(low, 11)
 
-    atr = talib.ATR(high, low, close, 11)
-
     if(esperarFechamento):
-        return cOpen[-1], high[-1], low[-1], close[-1], demaHigh[-1], demaLow[-1], atr[-1]
+        return high[-1], low[-1], close[-1], demaHigh[-1], demaLow[-1]
     else:
         return demaHigh[-1], demaLow[-1]
 
@@ -215,36 +149,18 @@ def obterSinal():
     agora = datetime.datetime.utcnow()
     horarioFormatado = datetime.datetime.strftime(agora, '%d/%m/%Y %H:%M:00')
 
-    cOpen, high, low, close, demaHigh, demaLow, atr = montarDataframe(
+    info = cliente.futures_position_information(symbol='BTCUSDT')
+
+    high, low, close, demaHigh, demaLow = montarDataframe(
         esperarFechamento=True)
-
-    differeceCloseOpen = close - cOpen
-    candleShadowHigh = 0.0
-    candleShadowLow = 0.0
-
-    if differeceCloseOpen >= 0:
-        candleShadowHigh = high - close
-        candleShadowLow = cOpen - low
-    else:
-        candleShadowHigh = high - cOpen
-        candleShadowLow = close - low
 
     centavosLow = float(str(low).split('.')[1])
     centavosHigh = float(str(high).split('.')[1])
 
-    # print('Fechamento: {} | DemaHigh: {} | DemaLow: {} | Horário: {}'.format(
-    #     close, demaHigh, demaLow, horario))
-
-    if len(operacoesAbertas) == 0:
+    if info[0]['entryPrice'] == '0.0':
         print('Aguardando sinal...')
-        if close < demaLow and centavosLow == 0 and candleShadowLow > abs(differeceCloseOpen) and candleShadowLow < 20:
-            # abrirPosicao(ativo=ativoCesta, lote=0.5,
-            #              lado=SIDE_BUY, preco=precoLimit)
-
-            # remover quando for operar em conta real
-            operacoesAbertas.append('comprado')
-            precoEntrada = close
-            stopLoss = low - atr * 0.1
+        if close < demaLow and centavosLow == 0:
+            abrirPosicao(ativo='BTCUSDT', lote=0.001, lado='BUY')
 
             mensagem = 'COMPRADO\n\nHorário entrada: {}'.format(
                 horarioFormatado)
@@ -253,14 +169,8 @@ def obterSinal():
 
             mensagemEntradaOperacao(preco=close, lado='COMPRA')
 
-        elif close > demaHigh and centavosHigh == 0 and candleShadowHigh > abs(differeceCloseOpen) and candleShadowHigh < 20:
-            # abrirPosicao(ativo=ativoCesta, lote=0.5,
-            #              lado=SIDE_BUY, preco=precoLimit)
-
-            # remover quando for operar em conta real
-            operacoesAbertas.append('vendido')
-            precoEntrada = close
-            stopLoss = high + atr * 0.1
+        elif close > demaHigh and centavosHigh == 0:
+            abrirPosicao(ativo='BTCUSDT', lote=0.001, lado='SELL')
 
             mensagem = 'VENDIDO\n\nHorário entrada: {}'.format(
                 horarioFormatado)
@@ -270,51 +180,29 @@ def obterSinal():
             mensagemEntradaOperacao(preco=close, lado='VENDA')
 
     else:
-        if operacoesAbertas[0] == 'comprado':
+        posicaoAtual = cliente.futures_account_trades(symbol='BTCUSDT')
+
+        if posicaoAtual[0]['side'] == 'BUY':
             print('Posição de compra ainda aberta.')
             if close > demaHigh:
 
-                operacoesAbertas.pop()
+                fecharPosicao(ativo='BTCUSDT', lote=0.001, lado='SELL')
 
-                if parcialCompra:
-                    resultadoAtual = (close - precoEntrada) / 2
-                    resultadoAcumulado += (close - precoEntrada) / 2
-                else:
-                    resultadoAtual = close - precoEntrada
-                    resultadoAcumulado += close - precoEntrada
-
-                parcialCompra = False
-
-                mensagem = 'COMPRA FECHADA\n\nHorário saída: {}\n\nResultado da operação: {} USD\n\nResultado acumulado: {} USD'.format(
-                    horarioFormatado, round(resultadoAtual, 2), round(resultadoAcumulado, 2))
+                mensagem = 'COMPRA FECHADA\n\nHorário saída: {}'.format(
+                    horarioFormatado)
 
                 mensagemTelegram(mensagem=mensagem)
 
-                mensagemSaidaOperacao(
-                    preco=close, atual=resultadoAtual, lado='COMPRA')
-
-        elif operacoesAbertas[0] == 'vendido':
+        elif posicaoAtual[0]['side'] == 'SELL':
             print('Posição de venda ainda aberta.')
             if close < demaLow:
 
-                operacoesAbertas.pop()
+                fecharPosicao(ativo='BTCUSDT', lote=0.001, lado='BUY')
 
-                if parcialVenda:
-                    resultadoAtual = (precoEntrada - close) / 2
-                    resultadoAcumulado += (precoEntrada - close) / 2
-                else:
-                    resultadoAtual = precoEntrada - close
-                    resultadoAcumulado += precoEntrada - close
-
-                parcialVenda = False
-
-                mensagem = 'VENDA FECHADA\n\nHorário saída: {}\n\nResultado da operação: {} USD\n\nResultado acumulado: {} USD'.format(
-                    horarioFormatado, round(resultadoAtual, 2), round(resultadoAcumulado, 2))
+                mensagem = 'VENDA FECHADA\n\nHorário saída: {}'.format(
+                    horarioFormatado)
 
                 mensagemTelegram(mensagem=mensagem)
-
-                mensagemSaidaOperacao(
-                    preco=close, atual=resultadoAtual, lado='VENDA')
 
 
 ws = websocket.WebSocketApp(SOCKET, on_open=onOpen,
