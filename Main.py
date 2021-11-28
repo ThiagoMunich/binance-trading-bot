@@ -17,7 +17,7 @@ from Negociacao import abrirPosicao, fecharPosicao, condicaoAbrirCompra, condica
 from Telegram import mensagemTelegram
 
 # SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
 
 demaLow = 0.0
 stopLoss = 0.0
@@ -112,7 +112,7 @@ def binanceDataFrame(self, klines):
 def montarDataframe(esperarFechamento):
 
     dados = np.array(cliente.get_klines(
-        symbol='BTCUSDT', interval=KLINE_INTERVAL_1MINUTE))
+        symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
 
     df = binanceDataFrame(dados, dados)
 
@@ -159,8 +159,8 @@ def obterSinal():
 
     if info[0]['entryPrice'] == '0.0':
         print('Aguardando sinal...')
-        if close < demaLow and centavosLow == 0:
-            abrirPosicao(ativo='BTCUSDT', lote=0.001, lado='BUY')
+        if close < demaLow and centavosLow == 0.0:
+            abrirPosicao(ativo='BTCUSDT', lote=0.01, lado='BUY')
 
             mensagem = 'COMPRADO\n\nHorário entrada: {}'.format(
                 horarioFormatado)
@@ -169,8 +169,8 @@ def obterSinal():
 
             mensagemEntradaOperacao(preco=close, lado='COMPRA')
 
-        elif close > demaHigh and centavosHigh == 0:
-            abrirPosicao(ativo='BTCUSDT', lote=0.001, lado='SELL')
+        elif close > demaHigh and centavosHigh == 0.0:
+            abrirPosicao(ativo='BTCUSDT', lote=0.01, lado='SELL')
 
             mensagem = 'VENDIDO\n\nHorário entrada: {}'.format(
                 horarioFormatado)
@@ -186,7 +186,7 @@ def obterSinal():
             print('Posição de compra ainda aberta.')
             if close > demaHigh:
 
-                fecharPosicao(ativo='BTCUSDT', lote=0.001, lado='SELL')
+                fecharPosicao(ativo='BTCUSDT', lote=0.01, lado='SELL')
 
                 mensagem = 'COMPRA FECHADA\n\nHorário saída: {}'.format(
                     horarioFormatado)
@@ -197,7 +197,7 @@ def obterSinal():
             print('Posição de venda ainda aberta.')
             if close < demaLow:
 
-                fecharPosicao(ativo='BTCUSDT', lote=0.001, lado='BUY')
+                fecharPosicao(ativo='BTCUSDT', lote=0.01, lado='BUY')
 
                 mensagem = 'VENDA FECHADA\n\nHorário saída: {}'.format(
                     horarioFormatado)
