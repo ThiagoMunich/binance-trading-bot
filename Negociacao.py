@@ -1,7 +1,5 @@
 from Binance import cliente
 
-operacoesAbertas = []
-
 
 def condicaoAbrirCompra(fechamento, demaLow, centavosLow):
     if(fechamento < demaLow):
@@ -42,8 +40,6 @@ def abrirPosicao(ativo, lote, lado):
         cliente.futures_create_order(
             symbol=ativo, side=lado, type='MARKET', quantity=lote)
 
-        operacoesAbertas.append(ativo)
-
     except Exception as e:
         return e
 
@@ -53,8 +49,10 @@ def fecharPosicao(ativo, lote, lado):
 
         cliente.futures_change_leverage(symbol=ativo, leverage=100)
 
-        cliente.futures_create_order(
+        ordem = cliente.futures_create_order(
             symbol=ativo, side=lado, type='MARKET', quantity=lote)
+
+        return ordem
 
     except Exception as e:
         return e
