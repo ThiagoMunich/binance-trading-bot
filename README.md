@@ -65,5 +65,5 @@ The bot operates using the following strategy:
 This bot is fully working and tested but the trading strategy used here is for educational purposes only. Cryptocurrency trading involves substantial risk and may not be suitable for everyone. Never trade with money you cannot afford to lose.
 
 ## 🧑‍💻 Contributing
-
+I've created the simplest architecture possible, without too many files and folders, so you can easily check the code and make sure it's legit.
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
