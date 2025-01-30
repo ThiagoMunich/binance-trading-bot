@@ -1,5 +1,4 @@
-
-from Binance import cliente
+from Binance import client
 import json
 import time
 import talib
@@ -9,36 +8,32 @@ import numpy as np
 import pandas as pd
 from binance.enums import *
 
-from Binance import cliente
+from Binance import client
 
 
-from Negociacao import abrirPosicao, fecharPosicao
+from Negotiation import openPosition, closePosition
 
-from Telegram import mensagemTelegram
+from Telegram import sendTelegramMessage
 
-# SOCKET = "wss://fstream.binance.com/ws/btcusdt@kline_1m"
+# this is the websocket for the 5 minute klines
 SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
 
 
 def onOpen(ws):
-    print("Conexão aberta")
+    print("Connection opened")
 
 
 def onClose(ws):
-    print("Conexão fechada")
+    print("Connection closed")
 
 
-def onMessage(ws, mensagem):
+def onMessage(ws, message):
+    messageJson = json.loads(message)
+    candle = messageJson['k']
+    candleClosed = candle['x']
 
-    mensagemJson = json.loads(mensagem)
-
-    candle = mensagemJson['k']
-
-    candleFechado = candle['x']
-
-    if candleFechado:
-
-        obterSinal()
+    if candleClosed:
+        getSignal()
 
 
 def binanceDataFrame(self, klines):
@@ -60,114 +55,90 @@ def binanceDataFrame(self, klines):
     return df
 
 
-def montarDataframe(esperarFechamento):
-
-    dados = np.array(cliente.get_klines(
+def buildDataframe(waitForClose):
+    data = np.array(client.get_klines(
         symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
 
-    df = binanceDataFrame(dados, dados)
-
+    df = binanceDataFrame(data, data)
     df.set_index('Open Time', inplace=True)
-
     df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
 
-    if(esperarFechamento):
+    if(waitForClose):
         df = df[:-1]
 
     high, low, close = df['High'], df['Low'], df['Close']
-
     demaHigh = talib.DEMA(high, 11)
-
     demaLow = talib.DEMA(low, 11)
 
-    if(esperarFechamento):
+    if(waitForClose):
         return high[-1], low[-1], close[-1], demaHigh[-1], demaLow[-1]
     else:
         return demaHigh[-1], demaLow[-1]
 
 
-def obterSinal():
-
-    # pra dar tempo de pegar os dados do candle que tá aberto, e depois removê-lo
-    # mantendo assim somente até o ultimo candle fechado
+def getSignal():
     time.sleep(3)
 
-    agora = datetime.datetime.utcnow()
-    horarioFormatado = datetime.datetime.strftime(agora, '%d/%m/%Y %H:%M:00')
+    now = datetime.datetime.utcnow()
+    formattedTime = datetime.datetime.strftime(now, '%d/%m/%Y %H:%M:00')
 
-    info = cliente.futures_position_information(symbol='BTCUSDT')
+    info = client.futures_position_information(symbol='BTCUSDT')
 
-    high, low, close, demaHigh, demaLow = montarDataframe(
-        esperarFechamento=True)
+    high, low, close, demaHigh, demaLow = buildDataframe(waitForClose=True)
 
-    centavosLow = float(str(low).split('.')[1])
-    centavosHigh = float(str(high).split('.')[1])
+    centsLow = float(str(low).split('.')[1])
+    centsHigh = float(str(high).split('.')[1])
 
     if info[0]['entryPrice'] == '0.0':
-        print('Aguardando sinal...')
-        if close < demaLow and centavosLow == 0.0:
-            abrirPosicao(ativo='BTCUSDT', lote=0.01, lado='BUY')
+        print('Waiting for signal...')
+        if close < demaLow and centsLow == 0.0:
+            openPosition(ativo='BTCUSDT', lote=0.01, lado='BUY')
 
-            mensagem = 'COMPRADO\n\nHorário entrada: {}'.format(
-                horarioFormatado)
+            message = 'BOUGHT\n\nEntry time: {}'.format(formattedTime)
+            sendTelegramMessage(message=message)
+            print('BOUGHT')
 
-            mensagemTelegram(mensagem=mensagem)
+        elif close > demaHigh and centsHigh == 0.0:
+            openPosition(ativo='BTCUSDT', lote=0.01, lado='SELL')
 
-            print('COMPRADO')
-
-        elif close > demaHigh and centavosHigh == 0.0:
-            abrirPosicao(ativo='BTCUSDT', lote=0.01, lado='SELL')
-
-            mensagem = 'VENDIDO\n\nHorário entrada: {}'.format(
-                horarioFormatado)
-
-            mensagemTelegram(mensagem=mensagem)
-
-            print('VENDIDO')
+            message = 'SOLD\n\nEntry time: {}'.format(formattedTime)
+            sendTelegramMessage(message=message)
+            print('SOLD')
 
     else:
-
         if float(info[0]['positionAmt']) > 0.0:
-            print('Posição de compra ainda aberta.')
+            print('Buy position still open.')
             if close > demaHigh:
-
-                ordemEnviada = fecharPosicao(
+                orderSent = closePosition(
                     ativo='BTCUSDT', lote=0.01, lado='SELL')
+                orderFullfilled = client.futures_get_order(
+                    symbol='BTCUSDT', orderId=orderSent['orderId'])
 
-                ordemCompleta = cliente.futures_get_order(
-                    symbol='BTCUSDT', orderId=ordemEnviada['orderId'])
+                # Divided by 100 because lot is 0.01
+                resultado = (float(orderFullfilled['avgPrice']) -
+                             float(info[0]['entryPrice'])) / 100
 
-                # Dívidido por 100 pq o lote é 0.01
-                resultado = (
-                    float(ordemCompleta['avgPrice']) - float(info[0]['entryPrice'])) / 100
-
-                mensagem = 'COMPRA FECHADA\n\nHorário saída: {}\n\nResultado: {}'.format(
-                    horarioFormatado, resultado)
-
-                mensagemTelegram(mensagem=mensagem)
-
-                print('Posição de compra fechada.')
+                message = 'BUY CLOSED\n\nExit time: {}\n\nResult: {}'.format(
+                    formattedTime, resultado)
+                sendTelegramMessage(message=message)
+                print('Buy position closed.')
 
         elif float(info[0]['positionAmt']) < 0.0:
-            print('Posição de venda ainda aberta.')
+            print('Sell position still open.')
             if close < demaLow:
-
-                ordemEnviada = fecharPosicao(
+                orderSent = closePosition(
                     ativo='BTCUSDT', lote=0.01, lado='BUY')
+                orderFullfilled = client.futures_get_order(
+                    symbol='BTCUSDT', orderId=orderSent['orderId'])
 
-                ordemCompleta = cliente.futures_get_order(
-                    symbol='BTCUSDT', orderId=ordemEnviada['orderId'])
-
-                # Dívidido por 100 pq o lote é 0.01
+                # Divided by 100 because lot is 0.01
                 resultado = (float(info[0]['entryPrice']) -
-                             float(ordemCompleta['avgPrice'])) / 100
+                             float(orderFullfilled['avgPrice'])) / 100
 
-                mensagem = 'VENDA FECHADA\n\nHorário saída: {}\n\nResultado: {}'.format(
-                    horarioFormatado, resultado)
-
-                mensagemTelegram(mensagem=mensagem)
-
-                print('Posição de venda fechada.')
+                message = 'SELL CLOSED\n\nExit time: {}\n\nResult: {}'.format(
+                    formattedTime, resultado)
+                sendTelegramMessage(message=message)
+                print('Sell position closed.')
 
 
 ws = websocket.WebSocketApp(SOCKET, on_open=onOpen,
