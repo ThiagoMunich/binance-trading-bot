@@ -18,7 +18,7 @@ A Python-based cryptocurrency trading bot that automatically trades BTC/USDT fut
 - Python 3.8+
 - Binance Futures account
 - Binance API keys ([How to create Binance API keys](https://www.binance.com/en/support/faq/how-to-create-api-360002502072))
-- Telegram bot token and chat ID ([How to create a Bot Father integration on Telegram](https://www.youtube.com/watch?v=URPIZZNr_2M&ab_channel=Indently))
+- Telegram bot token and chat ID ([How to create a Telegram Bot for FREE in Python - Bot Father](https://www.youtube.com/watch?v=URPIZZNr_2M&ab_channel=Indently))
 
 ## Installation
 
