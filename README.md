@@ -22,10 +22,9 @@ A Python-based cryptocurrency trading bot that automatically trades BTC/USDT fut
 
 ## Installation and running
 
-1. Clone the repository:
+1. Clone the repository and navigate to the folder:
 ```
-git clone https://github.com/thiagomunich/BinanceBot.git
-cd BinanceBot
+git clone https://github.com/thiagomunich/BinanceBot.git && cd BinanceBot
 ```
 
 2. Install required packages:
