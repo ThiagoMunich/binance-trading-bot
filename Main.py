@@ -91,7 +91,7 @@ def buildDataframe(waitForClose):
 def getSignal():
     time.sleep(3)
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     formattedTime = datetime.datetime.strftime(now, '%d/%m/%Y %H:%M:00')
 
     info = client.futures_position_information(symbol='BTCUSDT')
