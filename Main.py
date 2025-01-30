@@ -1,39 +1,51 @@
-from Binance import client
 import json
 import time
-import talib
+import pandas_ta as ta
 import websocket
 import datetime
 import numpy as np
 import pandas as pd
 from binance.enums import *
+import sys
+import ssl
 
 from Binance import client
-
-
 from Negotiation import openPosition, closePosition
-
 from Telegram import sendTelegramMessage
 
+
 # this is the websocket for the 5 minute klines
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
 
 
 def onOpen(ws):
-    print("Connection opened")
-
-
-def onClose(ws):
-    print("Connection closed")
+    print("\n=== WebSocket Connection opened ===")
+    print("Waiting for BTC/USDT price updates...\n")
 
 
 def onMessage(ws, message):
-    messageJson = json.loads(message)
-    candle = messageJson['k']
-    candleClosed = candle['x']
+    try:
+        messageJson = json.loads(message)
+        candle = messageJson['k']
+        candleClosed = candle['x']
+        
+        print(f"Current BTC Price: ${float(candle['c']):.2f}")
 
-    if candleClosed:
-        getSignal()
+        if candleClosed:
+            print("Candle closed - checking signals...")
+            getSignal()
+    except Exception as e:
+        print(f"Error in onMessage: {e}")
+
+
+def onError(ws, error):
+    print(f"WebSocket Error: {error}")
+
+
+def onClose(ws, close_status_code=None, close_msg=None):
+    print(f"\n=== WebSocket Connection closed ===")
+    print(f"Close code: {close_status_code}")
+    print(f"Close message: {close_msg}")
 
 
 def binanceDataFrame(self, klines):
@@ -67,8 +79,8 @@ def buildDataframe(waitForClose):
         df = df[:-1]
 
     high, low, close = df['High'], df['Low'], df['Close']
-    demaHigh = talib.DEMA(high, 11)
-    demaLow = talib.DEMA(low, 11)
+    demaHigh = ta.dema(high, 11)
+    demaLow = ta.dema(low, 11)
 
     if(waitForClose):
         return high[-1], low[-1], close[-1], demaHigh[-1], demaLow[-1]
@@ -141,6 +153,55 @@ def getSignal():
                 print('Sell position closed.')
 
 
-ws = websocket.WebSocketApp(SOCKET, on_open=onOpen,
-                            on_close=onClose, on_message=onMessage)
-ws.run_forever()
+def test_binance_connection():
+    try:
+        # Test API connection
+        client.get_server_time()
+        print("✓ Binance REST API connection successful")
+        return True
+    except Exception as e:
+        print(f"✗ Binance connection failed: {e}")
+        return False
+
+
+if __name__ == "__main__":
+    print("\n=== Starting BTC Trading Bot ===")
+    
+    # Test Binance connection first
+    if not test_binance_connection():
+        print("Exiting due to Binance connection failure")
+        sys.exit(1)
+
+    print(f"\nInitializing WebSocket connection to: {SOCKET}")
+    
+    while True:
+        try:
+            # Initialize WebSocket with all handlers and SSL options
+            ws = websocket.WebSocketApp(
+                SOCKET,
+                on_open=onOpen,
+                on_close=onClose,
+                on_message=onMessage,
+                on_error=onError
+            )
+            
+            print("WebSocket initialized, attempting connection...")
+            
+            # Add sslopt parameter to disable certificate verification
+            ws.run_forever(
+                ping_interval=60,
+                ping_timeout=30,
+                reconnect=5,
+                sslopt={"cert_reqs": ssl.CERT_NONE}
+            )
+            
+            print("WebSocket connection ended, reconnecting in 5 seconds...")
+            time.sleep(5)
+            
+        except KeyboardInterrupt:
+            print("\nBot stopped by user")
+            sys.exit(0)
+        except Exception as e:
+            print(f"Main loop error: {e}")
+            print("Retrying in 5 seconds...")
+            time.sleep(5)
