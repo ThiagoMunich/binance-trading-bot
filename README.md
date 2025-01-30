@@ -44,3 +44,31 @@ TELEGRAM_CHAT_ID="your-telegram-chat-id"
 ```
 python3 Main.py
 ```
+
+## How It Works
+
+The bot operates using the following strategy:
+
+1. Monitors BTC/USDT price movements in real-time using 1-minute candles
+2. Calculates DEMA indicators for both high and low prices
+3. Opens long positions when:
+   - Price closes below the low DEMA
+   - The cents of the low price are 0.00
+4. Opens short positions when:
+   - Price closes above the high DEMA
+   - The cents of the high price are 0.00
+5. Closes positions when price crosses the opposite DEMA
+6. Uses 100x leverage for all trades
+7. Sends notifications via Telegram for all trade actions
+
+## Risk Warning
+
+This bot is for educational purposes only. Cryptocurrency trading involves substantial risk and may not be suitable for everyone. Never trade with money you cannot afford to lose.
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
