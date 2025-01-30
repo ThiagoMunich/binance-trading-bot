@@ -24,6 +24,13 @@ def onOpen(ws):
 
 
 def onMessage(ws, message):
+    """
+    WebSocket message handler that processes incoming price data and triggers signal checking.
+    
+    Args:
+        ws: WebSocket connection instance
+        message: JSON message from Binance WebSocket stream
+    """
     try:
         messageJson = json.loads(message)
         candle = messageJson['k']
@@ -49,6 +56,15 @@ def onClose(ws, close_status_code=None, close_msg=None):
 
 
 def binanceDataFrame(self, klines):
+    """
+    Converts Binance kline data into a pandas DataFrame.
+    
+    Args:
+        klines: Raw kline data from Binance API
+        
+    Returns:
+        pandas.DataFrame: Processed DataFrame with OHLCV data
+    """
     df = pd.DataFrame(klines.reshape(-1, 12), dtype=float, columns=('Open Time',
                                                                     'Open',
                                                                     'High',
@@ -68,6 +84,15 @@ def binanceDataFrame(self, klines):
 
 
 def buildDataframe(waitForClose):
+    """
+    Builds and processes the trading DataFrame with technical indicators.
+    
+    Args:
+        waitForClose (bool): If True, excludes the current unclosed candle
+        
+    Returns:
+        tuple: Contains high, low, close prices and DEMA values based on waitForClose parameter
+    """
     data = np.array(client.get_klines(
         symbol='BTCUSDT', interval=KLINE_INTERVAL_5MINUTE))
 
@@ -89,6 +114,17 @@ def buildDataframe(waitForClose):
 
 
 def getSignal():
+    """
+    Main trading logic that checks for entry and exit signals.
+    
+    Implements the following strategy:
+    - Enters long when price closes below DEMA Low with cents = 0.0
+    - Enters short when price closes above DEMA High with cents = 0.0
+    - Exits long when price closes above DEMA High
+    - Exits short when price closes below DEMA Low
+    
+    Also handles position management and Telegram notifications.
+    """
     time.sleep(3)
 
     now = datetime.datetime.now(datetime.UTC)
@@ -104,14 +140,14 @@ def getSignal():
     if info[0]['entryPrice'] == '0.0':
         print('Waiting for signal...')
         if close < demaLow and centsLow == 0.0:
-            openPosition(ativo='BTCUSDT', lote=0.01, lado='BUY')
+            openPosition(ticker='BTCUSDT', size=0.01, side='BUY')
 
             message = 'BOUGHT\n\nEntry time: {}'.format(formattedTime)
             sendTelegramMessage(message=message)
             print('BOUGHT')
 
         elif close > demaHigh and centsHigh == 0.0:
-            openPosition(ativo='BTCUSDT', lote=0.01, lado='SELL')
+            openPosition(ticker='BTCUSDT', size=0.01, side='SELL')
 
             message = 'SOLD\n\nEntry time: {}'.format(formattedTime)
             sendTelegramMessage(message=message)
@@ -122,7 +158,7 @@ def getSignal():
             print('Buy position still open.')
             if close > demaHigh:
                 orderSent = closePosition(
-                    ativo='BTCUSDT', lote=0.01, lado='SELL')
+                    ticker='BTCUSDT', size=0.01, side='SELL')
                 orderFullfilled = client.futures_get_order(
                     symbol='BTCUSDT', orderId=orderSent['orderId'])
 
@@ -139,7 +175,7 @@ def getSignal():
             print('Sell position still open.')
             if close < demaLow:
                 orderSent = closePosition(
-                    ativo='BTCUSDT', lote=0.01, lado='BUY')
+                    ticker='BTCUSDT', size=0.01, side='BUY')
                 orderFullfilled = client.futures_get_order(
                     symbol='BTCUSDT', orderId=orderSent['orderId'])
 
@@ -154,6 +190,12 @@ def getSignal():
 
 
 def test_binance_connection():
+    """
+    Tests connection to Binance API.
+    
+    Returns:
+        bool: True if connection is successful, False otherwise
+    """
     try:
         # Test API connection
         client.get_server_time()
@@ -189,9 +231,9 @@ if __name__ == "__main__":
             
             # Add sslopt parameter to disable certificate verification
             ws.run_forever(
-                ping_interval=60,
-                ping_timeout=30,
                 reconnect=5,
+                ping_timeout=30,
+                ping_interval=60,
                 sslopt={"cert_reqs": ssl.CERT_NONE}
             )
             
