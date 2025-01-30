@@ -15,7 +15,7 @@ from Telegram import sendTelegramMessage
 
 
 # this is the websocket for the 5 minute klines
-SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+SOCKET = "wss://stream.binance.com:9443/ws/btcusdt@kline_5m"
 
 
 def onOpen(ws):
