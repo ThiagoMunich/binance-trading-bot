@@ -32,8 +32,8 @@ pip3 install -r requirements.txt
 ```
 
 3. Create a `.env` file based on `.env.example` and fill in your credentials:
-`BINANCE_API_KEY="your-binance-api-key"
+```BINANCE_API_KEY="your-binance-api-key"
 BINANCE_API_SECRET="your-binance-api-secret"
 TELEGRAM_TOKEN="your-telegram-bot-token"
 TELEGRAM_CHAT_ID="your-telegram-chat-id"
-`
+```
