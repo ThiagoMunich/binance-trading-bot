@@ -1,6 +1,8 @@
 # Binance Trading Bot
 
 A Python-based cryptocurrency trading bot that automatically trades BTC/USDT futures on Binance using DEMA (Double Exponential Moving Average) strategy.
+
+
 *Note: you can trade other pairs besides BTC/USDT. Just change the ticker param.*
 
 ## Features
