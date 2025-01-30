@@ -20,7 +20,7 @@ A Python-based cryptocurrency trading bot that automatically trades BTC/USDT fut
 - Binance API keys ([How to create Binance API keys](https://www.binance.com/en/support/faq/how-to-create-api-360002502072))
 - Telegram bot token and chat ID ([How to create a Telegram Bot for FREE in Python - Bot Father](https://www.youtube.com/watch?v=URPIZZNr_2M&ab_channel=Indently))
 
-## Installation and running
+## Installation and running 🛠️
 
 1. Clone the repository and navigate to the folder:
 ```
@@ -45,7 +45,7 @@ TELEGRAM_CHAT_ID="your-telegram-chat-id"
 python3 Main.py
 ```
 
-## How It Works
+## How It Works 🔎
 
 The bot operates using the following strategy:
 
@@ -61,7 +61,7 @@ The bot operates using the following strategy:
 6. Uses 100x leverage for all trades
 7. Sends notifications via Telegram for all trade actions
 
-## Risk Warning
+## Risk Warning ⚠️
 
 This bot is for educational purposes only. Cryptocurrency trading involves substantial risk and may not be suitable for everyone. Never trade with money you cannot afford to lose.
 
