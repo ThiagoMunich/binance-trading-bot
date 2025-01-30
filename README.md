@@ -1,11 +1,10 @@
-# Binance Trading Bot
+# Binance Trading Bot 🤖
 
 A Python-based cryptocurrency trading bot that automatically trades BTC/USDT futures on Binance using DEMA (Double Exponential Moving Average) strategy.
 
-
 *Note: you can trade other pairs besides BTC/USDT. Just change the ticker param.*
 
-## Features
+## ✨ Features
 
 - Real-time BTC price monitoring via WebSocket
 - Automated trading based on DEMA crossover strategy
@@ -13,14 +12,14 @@ A Python-based cryptocurrency trading bot that automatically trades BTC/USDT fut
 - Position management with leverage
 - Error handling and automatic reconnection
 
-## Prerequisites
+## ⚙️ Prerequisites
 
 - Python 3.8+
 - Binance Futures account
 - Binance API keys ([How to create Binance API keys](https://www.binance.com/en/support/faq/how-to-create-api-360002502072))
 - Telegram bot token and chat ID ([How to create a Telegram Bot for FREE in Python - Bot Father](https://www.youtube.com/watch?v=URPIZZNr_2M&ab_channel=Indently))
 
-## Installation and running 🛠️
+## 🛠️ Installation and running
 
 1. Clone the repository and navigate to the folder:
 ```
@@ -45,7 +44,7 @@ TELEGRAM_CHAT_ID="your-telegram-chat-id"
 python3 Main.py
 ```
 
-## How It Works 🔎
+## 🔎 How It Works
 
 The bot operates using the following strategy:
 
@@ -61,7 +60,7 @@ The bot operates using the following strategy:
 6. Uses 100x leverage for all trades
 7. Sends notifications via Telegram for all trade actions
 
-## Risk Warning ⚠️
+## ⚠️ Risk Warning
 
 This bot is for educational purposes only. Cryptocurrency trading involves substantial risk and may not be suitable for everyone. Never trade with money you cannot afford to lose.
 
